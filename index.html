@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Video Player — GiaoVienNam.mp4</title>
+  <title>Lời chúc từ A16</title>
   <style>
     html,body{height:100%;margin:0;background:#000}
     .video-wrap{display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
@@ -19,8 +19,8 @@
 <body>
   <div class="video-wrap">
     <!-- Đặt tệp video GiaoVienNam.mp4 cùng thư mục với file này -->
-    <video id="player" playsinline preload="auto" controls muted autoplay>
-      <source src="giaoviennam.mp4" type="video/mp4" />
+    <video id="player" playsinline preload="auto" controls autoplay>
+      <source src="GiaoVienNam.mp4" type="video/mp4" />
       Trình duyệt của bạn không hỗ trợ thẻ video.
     </video>
   </div>
@@ -114,8 +114,8 @@
       if(window.top !== window.self){
         setNotice('This page is embedded; fullscreen may be blocked.', true);
       } else {
-        setNotice('Auto-playing video...');
-        try { player.play().then(()=>setNotice('Playing automatically')).catch(err=>setNotice('Autoplay blocked: ' + err.message, true)); } catch(err){ setNotice('Autoplay error: ' + err.message, true); }
+        setNotice('Auto-playing video with sound...');
+        try { player.play().then(()=>setNotice('Playing automatically with sound')).catch(err=>setNotice('Autoplay blocked: ' + err.message, true)); } catch(err){ setNotice('Autoplay error: ' + err.message, true); }
       }
     });
   </script>
