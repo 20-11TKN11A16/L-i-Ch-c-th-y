@@ -13,14 +13,13 @@
     .title{position:fixed;left:12px;top:10px;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial}
     .notice{position:fixed;right:12px;top:10px;color:#eee;background:rgba(255,255,255,.04);padding:8px 10px;border-radius:6px;font-family:system-ui,Segoe UI,Roboto,Arial}
     .error{color:#ffb4b4}
-    /* keep accessible focus */
     .btn:focus{outline:2px solid rgba(255,255,255,.15)}
   </style>
 </head>
 <body>
   <div class="video-wrap">
     <!-- Đặt tệp video GiaoVienNam.mp4 cùng thư mục với file này -->
-    <video id="player" playsinline preload="metadata" controls>
+    <video id="player" playsinline preload="auto" controls muted autoplay>
       <source src="giaoviennam.mp4" type="video/mp4" />
       Trình duyệt của bạn không hỗ trợ thẻ video.
     </video>
@@ -58,7 +57,6 @@
       try{
         if(player.paused) player.play(); else player.pause();
       }catch(err){
-        // Some browsers may block play() for non-genuine user gesture
         console.error('Play error:', err);
         setNotice('Could not start playback: ' + (err && err.message ? err.message : err), true);
       }
@@ -66,46 +64,29 @@
     }
 
     function toggleFullscreen(){
-      // Feature-detect and provide graceful fallback + helpful message if policy blocks fullscreen
       if(window.top !== window.self){
-        // inside an iframe — fullscreen may be disallowed by the embedding page
-        setNotice('Page is embedded in a frame — fullscreen may be blocked by the site that embedded this page.', true);
+        setNotice('Page is embedded in a frame — fullscreen may be blocked.', true);
       }
-
       const el = player;
       try{
         if(document.fullscreenElement){
-          // exit fullscreen
           if(document.exitFullscreen) document.exitFullscreen();
-          else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
         } else {
-          // Best-effort requestFullscreen with vendor fallbacks and permissions-safe checks
           if(el.requestFullscreen) el.requestFullscreen();
-          else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-          else if(el.mozRequestFullScreen) el.mozRequestFullScreen();
-          else if(el.msRequestFullscreen) el.msRequestFullscreen();
-          else throw new Error('Fullscreen API not supported by this browser.');
         }
         setNotice('Toggling fullscreen...');
       }catch(err){
         console.error('Fullscreen error:', err);
-        // Common reason: PermissionsPolicy ("fullscreen") blocked in an embedded context.
-        let msg = 'Could not enter fullscreen.';
-        if(err && err.name === 'SecurityError') msg += ' Security restrictions prevented fullscreen.';
-        else if(err && err.name === 'TypeError') msg += ' Permissions policy may block fullscreen in this context.';
-        else if(err && err.message) msg += ' ' + err.message;
-        msg += ' You can open the video in a new tab as an alternative.';
-        setNotice(msg, true);
+        setNotice('Could not enter fullscreen. ' + (err.message || ''), true);
       }
     }
 
     function openInNewTab(){
-      // Open the video file directly in a new tab/window so the browser can manage fullscreen there.
       const src = (player.querySelector('source') || {}).src || 'GiaoVienNam.mp4';
       try{
         const win = window.open(src, '_blank');
-        if(!win) setNotice('Popup blocked. Please allow popups or right-click the video file and open it.', true);
-        else setNotice('Opened video in new tab. Use that tab for fullscreen.');
+        if(!win) setNotice('Popup blocked. Please allow popups.', true);
+        else setNotice('Opened video in new tab.');
       }catch(err){
         console.error('Open new tab error:', err);
         setNotice('Could not open new tab: ' + (err.message || err), true);
@@ -115,40 +96,28 @@
     function updateButtons(){
       playBtn.textContent = player.paused ? 'Play (Space)' : 'Pause (Space)';
       muteBtn.textContent = player.muted ? 'Unmute (M)' : 'Mute (M)';
-      // fs button label doesn't change because toggling fullscreen state may be managed by browser UI
     }
 
-    // Keyboard shortcuts
     window.addEventListener('keydown', (e)=>{
-      // Only handle keys when not focused on an input/textarea
       const tag = document.activeElement && document.activeElement.tagName;
       if(tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement && document.activeElement.isContentEditable) return;
-
       if(e.code === 'Space'){ e.preventDefault(); togglePlay(); }
       if(e.key === 'm' || e.key === 'M'){ player.muted = !player.muted; updateButtons(); }
       if(e.key === 'f' || e.key === 'F'){ toggleFullscreen(); }
     });
 
-    // Update UI on play/pause events
     player.addEventListener('play', ()=>{ updateButtons(); setNotice('Playing'); });
     player.addEventListener('pause', ()=>{ updateButtons(); setNotice('Paused'); });
     player.addEventListener('volumechange', updateButtons);
 
-    // Detect and inform about common fullscreen permission issues on load
     window.addEventListener('load', ()=>{
       if(window.top !== window.self){
-        // embedded
-        setNotice('This page appears embedded in a frame. Fullscreen and some interactions may be blocked by the embedding site.', true);
-      } else if(!document.fullscreenEnabled){
-        setNotice('Your browser or its settings may not allow fullscreen mode from this page.', true);
+        setNotice('This page is embedded; fullscreen may be blocked.', true);
       } else {
-        setNotice('Ready');
+        setNotice('Auto-playing video...');
+        try { player.play().then(()=>setNotice('Playing automatically')).catch(err=>setNotice('Autoplay blocked: ' + err.message, true)); } catch(err){ setNotice('Autoplay error: ' + err.message, true); }
       }
     });
-
-    // Helpful note about autoplay
-    // Many browsers block autoplay with sound — if you want autoplay, set the muted attribute on the <video> element.
   </script>
 </body>
 </html>
-
